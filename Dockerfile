@@ -6,8 +6,7 @@ FROM php:${PHP_VERSION}
 WORKDIR /web
 
 # packages 
-RUN apk add --update --no-cache  .build-deps \
-	    $PHPIZE_DEPS \
+RUN apk add --update --no-cache \ 
 	    aspell-dev \
 	    autoconf \
 	    build-base \
@@ -32,7 +31,7 @@ RUN apk add --update --no-cache  .build-deps \
 	    make \
 	    unzip \
 	    ffmpeg \
-	    wget && \
+	    wget \
 	    imagemagick \
 	    libmemcached-dev \
 	    libtool \
@@ -40,36 +39,34 @@ RUN apk add --update --no-cache  .build-deps \
 	    freetype \
 	    libjpeg-turbo \
 	    libpng \
-	    && docker-php-ext-configure gd \
-	    --with-freetype=/usr/include/ \
-	    --with-jpeg=/usr/include/ \
-	    && docker-php-ext-install -j$(nproc) gd \
-	    && docker-php-ext-enable gd \
-	    && apk del --no-cache \
+	    postgresql-dev \
 	    freetype-dev \
 	    libjpeg-turbo-dev \
 	    libpng-dev \
-	    && apk add --update --no-cache .zip-runtime-deps libzip-dev \
-	    && docker-php-ext-install zip \
-	    \
+	    libzip-dev \ 
+	    ffmpeg 
+
+# install gd
+RUN docker-php-ext-configure gd \
+	    --with-freetype=/usr/include/ \
+	    --with-jpeg=/usr/include/ \
+	    && docker-php-ext-install -j$(nproc) gd \
+	    && docker-php-ext-enable gd 
+
+
+# install zip 
+RUN docker-php-ext-install zip 
 # install postgresql
-	    && apk add --update --no-cache  .postgresql-runtime-deps postgresql-dev \
-		    && docker-php-ext-install pgsql pdo_pgsql \
-		    \
+RUN docker-php-ext-install pgsql pdo_pgsql 
 # Install imagick
-		    && apk add --update --no-cache .imagick-runtime-deps imagemagick \
-			    && pecl install imagick \
-			    && docker-php-ext-enable imagick \
-			    \
+RUN pecl install imagick \
+	  && docker-php-ext-enable imagick 
 # Install redis
-			    && pecl install redis-5.3.1 \
-				    && docker-php-ext-enable redis \
-				    \
-# Install ffmpeg
-				    && apk add --update --no-cache ffmpeg \
-					    && rm -rf /tmp/* \
-							     && apk del .build-deps \
-							     && rm -fr /tmp/pear	
+RUN pecl install redis-5.3.1 \
+	  && docker-php-ext-enable redis 
+# clean
+RUN rm -rf /tmp/* \
+	 && rm -fr /tmp/pear	
 
 
 # Register the COMPOSER_HOME environment variable
